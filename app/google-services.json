@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "971796368101",
+    "project_id": "meetly-a7ee4",
+    "storage_bucket": "meetly-a7ee4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971796368101:android:4ccac75cf86c530b61220c",
+        "android_client_info": {
+          "package_name": "com.example.meetly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCTmICmjPW4kOdpqTZ0SisK13U2ExFirs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
