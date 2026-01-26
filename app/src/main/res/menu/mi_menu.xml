@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/Item_Home" android:title="@string/Item_Home" android:icon="@drawable/ic_home"/>
+    <item android:id="@+id/Item_My_Events" android:title="@string/Item_My_Events" android:enabled="false" android:icon="@drawable/ic_my_events"/>
+    <item android:id="@+id/Item_Search" android:title="@string/Item_Search" android:icon="@drawable/ic_search"/>
+    <item android:id="@+id/Item_Notification" android:title="@string/Item_Notifications" android:icon="@drawable/ic_notifications"/>
+    <item android:id="@+id/Item_Account" android:title="@string/Item_Account" android:icon="@drawable/ic_account"/>
+
+</menu>
