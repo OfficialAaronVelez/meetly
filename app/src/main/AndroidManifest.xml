@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Meetly">
         <activity
+            android:name=".Registro_email"
+            android:exported="false" />
+        <activity
             android:name=".Registro_Email"
             android:exported="false" />
         <activity
@@ -28,7 +31,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
-            android:exported="true"></activity>
+            android:exported="true" />
     </application>
 
 </manifest>
