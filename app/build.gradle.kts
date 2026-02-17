@@ -39,6 +39,13 @@ android {
     buildFeatures{
         viewBinding = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            pickFirsts += "META-INF/NOTICE.md"
+            pickFirsts += "META-INF/LICENSE.md"
+        }
+    }
 }
 
 dependencies {
@@ -53,4 +60,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
+
+    // JavaMail dependencies
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
 }

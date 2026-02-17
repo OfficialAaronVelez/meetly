@@ -5,10 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.meetly.databinding.ActivityRegistroEmailBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -32,13 +29,11 @@ class Registro_email : AppCompatActivity() {
         binding.BtnRegistrar.setOnClickListener {
             validarInfo()
         }
-
     }
 
     private var email = ""
     private var password = ""
     private var r_password = ""
-
 
     private fun validarInfo() {
         email = binding.EtEmail.text.toString().trim()
@@ -48,7 +43,6 @@ class Registro_email : AppCompatActivity() {
         if(!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
             binding.EtEmail.error = "Email invalido"
             binding.EtEmail.requestFocus()
-
         }
         else if (email.isEmpty()) {
             binding.EtEmail.error = "Ingrese un email"
@@ -67,9 +61,6 @@ class Registro_email : AppCompatActivity() {
         }else{
             registrarUsuario()
         }
-
-
-
     }
 
     private fun registrarUsuario() {
@@ -78,11 +69,23 @@ class Registro_email : AppCompatActivity() {
 
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener {
+                // LLAMADA AL ENVIO DE EMAIL CON CREDENCIALES
+                EmailSender.sendCredentialsEmail(email, password)
+
+                val user = firebaseAuth.currentUser
+                user?.sendEmailVerification()
+                    ?.addOnSuccessListener {
+                        Toast.makeText(this, "Bienvenido a Meetly! Email de verificación enviado.", Toast.LENGTH_LONG).show()
+                    }
+                    ?.addOnFailureListener { e ->
+                        Toast.makeText(this, "Error al enviar verificación: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                
                 llenarInfoBD()
             }
             .addOnFailureListener { exception ->
                 progressDialog.dismiss()
-                Toast.makeText(this, "No se registró al usuario debiso a ${exception.message}",
+                Toast.makeText(this, "No se registró al usuario debido a ${exception.message}",
                     Toast.LENGTH_SHORT).show()
             }
     }
@@ -90,12 +93,11 @@ class Registro_email : AppCompatActivity() {
     private fun llenarInfoBD() {
         progressDialog.setMessage("Guardando información")
 
-        val tiempo = Constantes.obtenerTiempoDis()
+        val tiempo = System.currentTimeMillis()
         val emailUsuario = firebaseAuth.currentUser!!.email
         val uidUsuario = firebaseAuth.uid
 
         val hashMap = HashMap<String, Any>()
-
         hashMap["nombres"] = ""
         hashMap["codigoTelefono"] = ""
         hashMap["telefono"] = ""
@@ -120,12 +122,6 @@ class Registro_email : AppCompatActivity() {
                 progressDialog.dismiss()
                 Toast.makeText(this,"No se registró debido a ${exception.message}",
                     Toast.LENGTH_SHORT).show()
-
-
             }
-
-
     }
-
-
 }
