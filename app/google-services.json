@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "971796368101",
+    "firebase_url": "https://meetly-a7ee4-default-rtdb.firebaseio.com",
     "project_id": "meetly-a7ee4",
     "storage_bucket": "meetly-a7ee4.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.meetly"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "971796368101-et0arlckm69l47vail0t178o1mhmuqu7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.meetly",
+            "certificate_hash": "5e6e3ded58862565868ab0d9d542ed79dce4ec62"
+          }
+        },
+        {
+          "client_id": "971796368101-c19fvno24tbcg6sit0jqsq8hqdmjcsot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCCTmICmjPW4kOdpqTZ0SisK13U2ExFirs"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971796368101-c19fvno24tbcg6sit0jqsq8hqdmjcsot.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
