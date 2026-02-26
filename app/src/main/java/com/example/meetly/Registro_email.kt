@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.meetly.EnviarCorreo
 import com.example.meetly.databinding.ActivityRegistroEmailBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -71,16 +70,16 @@ class Registro_email : AppCompatActivity() {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener {
                 // LLAMADA AL ENVIO DE EMAIL CON CREDENCIALES
-                EnviarCorreo.enviar(email, password)
-
-                val user = firebaseAuth.currentUser
-                user?.sendEmailVerification()
-                    ?.addOnSuccessListener {
-                        Toast.makeText(this, "Bienvenido a Meetly! Email de verificación enviado.", Toast.LENGTH_LONG).show()
-                    }
-                    ?.addOnFailureListener { e ->
-                        Toast.makeText(this, "Error al enviar verificación: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+//                EnviarCorreo.enviar(email, password)
+//
+//                val user = firebaseAuth.currentUser
+//                user?.sendEmailVerification()
+//                    ?.addOnSuccessListener {
+//                        Toast.makeText(this, "Bienvenido a Meetly! Email de verificación enviado.", Toast.LENGTH_LONG).show()
+//                    }
+//                    ?.addOnFailureListener { e ->
+//                        Toast.makeText(this, "Error al enviar verificación: ${e.message}", Toast.LENGTH_SHORT).show()
+//                    }
                 
                 llenarInfoBD()
             }

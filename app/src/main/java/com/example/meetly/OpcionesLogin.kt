@@ -18,22 +18,18 @@ import com.google.firebase.database.FirebaseDatabase
 
 class OpcionesLogin : AppCompatActivity() {
 
-
     private lateinit var binding: ActivityOpcionesLoginBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var progressDialog: ProgressDialog
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOpcionesLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         progressDialog = ProgressDialog(this)
         progressDialog.setTitle("Espere por favor")
         progressDialog.setCanceledOnTouchOutside(false)
-
 
         firebaseAuth = FirebaseAuth.getInstance()
         comprobarSesion()
@@ -42,6 +38,7 @@ class OpcionesLogin : AppCompatActivity() {
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
+
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
         binding.IngresarGoogle.setOnClickListener {
@@ -52,10 +49,12 @@ class OpcionesLogin : AppCompatActivity() {
             startActivity(Intent(this@OpcionesLogin, Login_email::class.java))
         }
     }
+
     private fun googleLogin() {
         val googleSignInIntent = mGoogleSignInClient.signInIntent
         googleSignInARL.launch(googleSignInIntent)
     }
+
     private val  googleSignInARL = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()){ resultado ->
         if (resultado.resultCode == RESULT_OK){
@@ -125,11 +124,13 @@ class OpcionesLogin : AppCompatActivity() {
             }
 
     }
-    
+
     private fun comprobarSesion(){
         if(firebaseAuth.currentUser != null){
             startActivity(Intent(this, MainActivity::class.java))
             finishAffinity()
         }
     }
+
+
 }
