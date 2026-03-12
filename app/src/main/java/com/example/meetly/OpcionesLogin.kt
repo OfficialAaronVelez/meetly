@@ -22,6 +22,7 @@ class OpcionesLogin : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var progressDialog: ProgressDialog
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOpcionesLoginBinding.inflate(layoutInflater)
@@ -55,7 +56,7 @@ class OpcionesLogin : AppCompatActivity() {
         googleSignInARL.launch(googleSignInIntent)
     }
 
-    private val  googleSignInARL = registerForActivityResult(
+    private val googleSignInARL = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()){ resultado ->
         if (resultado.resultCode == RESULT_OK){
             val data = resultado.data
@@ -70,32 +71,37 @@ class OpcionesLogin : AppCompatActivity() {
     }
 
     private fun autenticacionGoogle(idToken: String?) {
+        progressDialog.setMessage("Autenticando con Google")
+        progressDialog.show()
+
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         firebaseAuth.signInWithCredential(credential)
             .addOnSuccessListener { resultadoAuth ->
                 if (resultadoAuth.additionalUserInfo!!.isNewUser){
                     llenarInfoBD()
-
-                }else{
+                } else {
+                    progressDialog.dismiss()
                     startActivity(Intent(this, MainActivity::class.java))
                     finishAffinity()
                 }
             }
             .addOnFailureListener { e ->
+                progressDialog.dismiss()
                 Toast.makeText(this, "${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
     private fun llenarInfoBD() {
         progressDialog.setMessage("Guardando información")
+        // No llamamos a show() aquí porque ya debería estar visible desde autenticacionGoogle
 
-        val tiempo = Constantes.obtenerTiempoDis()
-        val emailUsuario = firebaseAuth.currentUser!!.email
+        val tiempo = System.currentTimeMillis() // Usando System directamente si Constantes falla
+        val emailUsuario = firebaseAuth.currentUser?.email
         val uidUsuario = firebaseAuth.uid
         val nombreUsuario = firebaseAuth.currentUser?.displayName
 
-        val hashMap = HashMap<String, Any>()
-
-        hashMap["nombres"] = "${nombreUsuario}"
+        val hashMap = HashMap<String, Any?>()
+        hashMap["nombres"] = nombreUsuario ?: ""
         hashMap["codigoTelefono"] = ""
         hashMap["telefono"] = ""
         hashMap["urlImagenPerfil"] = ""
@@ -103,12 +109,11 @@ class OpcionesLogin : AppCompatActivity() {
         hashMap["escribiendo"] = ""
         hashMap["tiempo"] = tiempo
         hashMap["online"] = true
-        hashMap["email"] = "${emailUsuario}"
-        hashMap["uid"] = "${uidUsuario}"
+        hashMap["email"] = emailUsuario
+        hashMap["uid"] = uidUsuario
         hashMap["fecha_nac"] = ""
 
         val ref = FirebaseDatabase.getInstance().getReference("Usuarios")
-
         ref.child(uidUsuario!!).setValue(hashMap)
             .addOnSuccessListener {
                 progressDialog.dismiss()
@@ -117,12 +122,8 @@ class OpcionesLogin : AppCompatActivity() {
             }
             .addOnFailureListener { exception ->
                 progressDialog.dismiss()
-                Toast.makeText(this,"No se registró debido a ${exception.message}",
-                    Toast.LENGTH_SHORT).show()
-
-
+                Toast.makeText(this,"No se guardó la info: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
-
     }
 
     private fun comprobarSesion(){
@@ -131,6 +132,4 @@ class OpcionesLogin : AppCompatActivity() {
             finishAffinity()
         }
     }
-
-
 }
