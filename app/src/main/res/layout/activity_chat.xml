@@ -16,6 +16,44 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/TvNombreUsuario"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/IbRegresar"
+        app:layout_constraintEnd_toStartOf="@+id/IbMasOpciones"
+        app:layout_constraintStart_toEndOf="@+id/IbRegresar"
+        app:layout_constraintTop_toTopOf="@+id/IbRegresar" />
+
+    <ImageButton
+        android:id="@+id/IbMasOpciones"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_mas_opciones"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/TvBloqueado"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#FFEEEE"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="#CC0000"
+        android:textSize="13sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/IbRegresar" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatsRV"
         android:layout_width="0dp"
@@ -24,7 +62,7 @@
         app:layout_constraintBottom_toTopOf="@+id/EtMensajeChat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/IbRegresar" />
+        app:layout_constraintTop_toBottomOf="@+id/TvBloqueado" />
 
     <EditText
         android:id="@+id/EtMensajeChat"

@@ -7,12 +7,16 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.meetly.Adaptadores.AdaptadorChat
 import com.example.meetly.Constantes
 import com.example.meetly.Modelos.Chat
+import com.example.meetly.R
 import com.example.meetly.databinding.ActivityChatBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -32,6 +36,9 @@ class ChatActivity : AppCompatActivity() {
     private var chatRuta = ""
     private var imagenUri: Uri? = null
 
+    private var yoBloqueé = false
+    private var meBloquearon = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChatBinding.inflate(layoutInflater)
@@ -47,6 +54,16 @@ class ChatActivity : AppCompatActivity() {
         miUid = firebaseAuth.uid!!
         chatRuta = Constantes.rutaChat(uid, miUid)
 
+        val nombreRecibido = intent.getStringExtra("nombre")
+        if (!nombreRecibido.isNullOrEmpty()) {
+            binding.TvNombreUsuario.text = nombreRecibido
+        } else {
+            FirebaseDatabase.getInstance().getReference("Usuarios").child(uid)
+                .get().addOnSuccessListener { snap ->
+                    binding.TvNombreUsuario.text = snap.child("nombres").getValue(String::class.java) ?: ""
+                }
+        }
+
         binding.IbRegresar.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
         binding.enviarFAB.setOnClickListener { validarMensaje() }
         binding.adjuntarFAB.setOnClickListener {
@@ -56,8 +73,103 @@ class ChatActivity : AppCompatActivity() {
                 solicitarPermisoAlmacenamiento.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
+        binding.IbMasOpciones.setOnClickListener { mostrarMenu(it) }
 
+        observarBloqueos()
         cargarMensajes()
+    }
+
+    private fun observarBloqueos() {
+        val db = FirebaseDatabase.getInstance().reference
+
+        db.child("Bloqueados/$miUid/$uid").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                yoBloqueé = snapshot.exists()
+                actualizarEstadoBloqueado()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        db.child("Bloqueados/$uid/$miUid").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                meBloquearon = snapshot.exists()
+                actualizarEstadoBloqueado()
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    private fun actualizarEstadoBloqueado() {
+        val bloqueado = yoBloqueé || meBloquearon
+        binding.enviarFAB.isEnabled = !bloqueado
+        binding.adjuntarFAB.isEnabled = !bloqueado
+        binding.EtMensajeChat.isEnabled = !bloqueado
+
+        when {
+            yoBloqueé -> {
+                binding.TvBloqueado.text = "Has bloqueado a este usuario"
+                binding.TvBloqueado.visibility = View.VISIBLE
+            }
+            meBloquearon -> {
+                binding.TvBloqueado.text = "No puedes enviar mensajes a este usuario"
+                binding.TvBloqueado.visibility = View.VISIBLE
+            }
+            else -> {
+                binding.TvBloqueado.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun mostrarMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.inflate(R.menu.menu_chat)
+        popup.menu.findItem(R.id.opcion_bloquear).isVisible = !yoBloqueé
+        popup.menu.findItem(R.id.opcion_desbloquear).isVisible = yoBloqueé
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.opcion_bloquear -> {
+                    confirmarBloqueo()
+                    true
+                }
+                R.id.opcion_desbloquear -> {
+                    desbloquearUsuario()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun confirmarBloqueo() {
+        AlertDialog.Builder(this)
+            .setTitle("Bloquear usuario")
+            .setMessage("¿Deseas bloquear a este usuario? Ya no podrá enviarte mensajes.")
+            .setPositiveButton("Bloquear") { _, _ -> bloquearUsuario() }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun bloquearUsuario() {
+        FirebaseDatabase.getInstance().getReference("Bloqueados/$miUid/$uid")
+            .setValue(true)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Usuario bloqueado", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun desbloquearUsuario() {
+        FirebaseDatabase.getInstance().getReference("Bloqueados/$miUid/$uid")
+            .removeValue()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Usuario desbloqueado", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun cargarMensajes() {
@@ -74,6 +186,9 @@ class ChatActivity : AppCompatActivity() {
                         }
                     }
                     binding.chatsRV.adapter = AdaptadorChat(this@ChatActivity, mensajesArrayList)
+                    if (mensajesArrayList.isNotEmpty()) {
+                        binding.chatsRV.scrollToPosition(mensajesArrayList.size - 1)
+                    }
                 }
                 override fun onCancelled(error: DatabaseError) {
                     Log.e("ChatActivity", "Error: ${error.message}")
@@ -82,6 +197,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun validarMensaje() {
+        if (yoBloqueé || meBloquearon) return
         val mensaje = binding.EtMensajeChat.text.toString().trim()
         if (mensaje.isEmpty()) {
             Toast.makeText(this, "Ingrese un mensaje", Toast.LENGTH_SHORT).show()

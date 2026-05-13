@@ -37,6 +37,7 @@ class AdaptadorUsuario(
         holder.itemView.setOnClickListener {
             val intent = Intent(contexto, ChatActivity::class.java)
             intent.putExtra("uid", usuario.uid)
+            intent.putExtra("nombre", usuario.nombres)
             contexto.startActivity(intent)
         }
     }
