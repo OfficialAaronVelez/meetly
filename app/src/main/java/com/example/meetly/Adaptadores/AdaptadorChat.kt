@@ -3,6 +3,7 @@ package com.example.meetly.Adaptadores
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
+import android.media.MediaPlayer
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -20,22 +21,15 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
-class AdaptadorChat : RecyclerView.Adapter<AdaptadorChat.HolderChat> {
+class AdaptadorChat(private val context: Context, private val chatArray: ArrayList<Chat>) : 
+    RecyclerView.Adapter<AdaptadorChat.HolderChat>() {
 
-    private val context: Context
-    private val chatArray: ArrayList<Chat>
-    private val firebaseAuth: FirebaseAuth
-    private var chatRuta = ""
+    private val firebaseAuth: FirebaseAuth = FirebaseAuth.getInstance()
+    private var mediaPlayer: MediaPlayer? = null
 
     companion object {
         private const val MENSAJE_IZQUIERDO = 0
         private const val MENSAJE_DERECHO = 1
-    }
-
-    constructor(context: Context, chatArray: ArrayList<Chat>) {
-        this.context = context
-        this.chatArray = chatArray
-        firebaseAuth = FirebaseAuth.getInstance()
     }
 
     inner class HolderChat(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -45,13 +39,9 @@ class AdaptadorChat : RecyclerView.Adapter<AdaptadorChat.HolderChat> {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HolderChat {
-        return if (viewType == MENSAJE_DERECHO) {
-            val view = LayoutInflater.from(context).inflate(R.layout.item_chat_derecho, parent, false)
-            HolderChat(view)
-        } else {
-            val view = LayoutInflater.from(context).inflate(R.layout.item_chat_izquierdo, parent, false)
-            HolderChat(view)
-        }
+        val layout = if (viewType == MENSAJE_DERECHO) R.layout.item_chat_derecho else R.layout.item_chat_izquierdo
+        val view = LayoutInflater.from(context).inflate(layout, parent, false)
+        return HolderChat(view)
     }
 
     override fun getItemCount(): Int = chatArray.size
@@ -64,63 +54,61 @@ class AdaptadorChat : RecyclerView.Adapter<AdaptadorChat.HolderChat> {
         val modeloChat = chatArray[position]
         holder.Tv_tiempo_mensaje.text = Constantes.obtenerFechaHora(modeloChat.tiempo)
 
-        if (modeloChat.tipoMensaje == Constantes.MENSAJE_TIPO_TEXTO) {
-            holder.Tv_mensaje.visibility = View.VISIBLE
-            holder.Iv_mensaje.visibility = View.GONE
-            holder.Tv_mensaje.text = modeloChat.mensaje
-
-            if (modeloChat.emisorUid == firebaseAuth.uid) {
-                holder.itemView.setOnClickListener {
-                    AlertDialog.Builder(holder.itemView.context)
-                        .setTitle("¿Qué deseas realizar?")
-                        .setItems(arrayOf<CharSequence>("Eliminar mensaje", "Cancelar")) { _, which ->
-                            if (which == 0) eliminarMensaje(position, holder, modeloChat)
-                        }.show()
-                }
+        when (modeloChat.tipoMensaje) {
+            Constantes.MENSAJE_TIPO_TEXTO -> {
+                holder.Tv_mensaje.visibility = View.VISIBLE
+                holder.Iv_mensaje.visibility = View.GONE
+                holder.Tv_mensaje.text = modeloChat.mensaje
             }
-        } else {
-            holder.Tv_mensaje.visibility = View.GONE
-            holder.Iv_mensaje.visibility = View.VISIBLE
-            try {
+            Constantes.MENSAJE_TIPO_IMAGEN -> {
+                holder.Tv_mensaje.visibility = View.GONE
+                holder.Iv_mensaje.visibility = View.VISIBLE
                 Glide.with(context).load(modeloChat.mensaje)
-                    .placeholder(R.drawable.img_enviada)
+                    .placeholder(R.drawable.ic_meetly_background)
                     .into(holder.Iv_mensaje)
-            } catch (e: Exception) {
-                Log.e("AdaptadorChat", "Error al cargar imagen: ${e.message}")
+                
+                holder.Iv_mensaje.setOnClickListener { visualizadorImagen(modeloChat.mensaje) }
             }
+            Constantes.MENSAJE_TIPO_AUDIO -> {
+                holder.Tv_mensaje.visibility = View.VISIBLE
+                holder.Iv_mensaje.visibility = View.GONE
+                holder.Tv_mensaje.text = "▶ Mensaje de voz"
+                holder.Tv_mensaje.setOnClickListener { reproducirAudio(modeloChat.mensaje) }
+            }
+        }
 
-            if (modeloChat.emisorUid == firebaseAuth.uid) {
-                holder.itemView.setOnClickListener {
-                    AlertDialog.Builder(holder.itemView.context)
-                        .setTitle("¿Qué desea realizar?")
-                        .setItems(arrayOf<CharSequence>("Eliminar imagen", "Ver imagen", "Cancelar")) { _, which ->
-                            if (which == 0) eliminarMensaje(position, holder, modeloChat)
-                            else if (which == 1) visualizadorImagen(modeloChat.mensaje)
-                        }.show()
-                }
-            } else {
-                holder.itemView.setOnClickListener {
-                    AlertDialog.Builder(holder.itemView.context)
-                        .setTitle("¿Qué desea realizar?")
-                        .setItems(arrayOf<CharSequence>("Ver imagen", "Cancelar")) { _, which ->
-                            if (which == 0) visualizadorImagen(modeloChat.mensaje)
-                        }.show()
-                }
+        if (modeloChat.emisorUid == firebaseAuth.uid) {
+            holder.itemView.setOnLongClickListener {
+                AlertDialog.Builder(context)
+                    .setTitle("Eliminar mensaje")
+                    .setMessage("¿Deseas eliminar este mensaje?")
+                    .setPositiveButton("Eliminar") { _, _ -> eliminarMensaje(position, modeloChat) }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+                true
             }
         }
     }
 
-    private fun eliminarMensaje(position: Int, holder: HolderChat, modeloChat: Chat) {
-        chatRuta = Constantes.rutaChat(modeloChat.receptorUid, modeloChat.emisorUid)
+    private fun reproducirAudio(url: String) {
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer().apply {
+                setDataSource(url)
+                prepare()
+                start()
+            }
+            Toast.makeText(context, "Reproduciendo audio...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error al reproducir audio", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun eliminarMensaje(position: Int, modeloChat: Chat) {
+        val chatRuta = Constantes.rutaChat(modeloChat.receptorUid, modeloChat.emisorUid)
         FirebaseDatabase.getInstance().reference
-            .child("Chats").child(chatRuta).child(chatArray[position].idMensaje)
+            .child("Chats").child(chatRuta).child(modeloChat.idMensaje)
             .removeValue()
-            .addOnSuccessListener {
-                Toast.makeText(holder.itemView.context, "Mensaje eliminado", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(holder.itemView.context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun visualizadorImagen(imagen: String) {
@@ -128,11 +116,8 @@ class AdaptadorChat : RecyclerView.Adapter<AdaptadorChat.HolderChat> {
         dialog.setContentView(R.layout.visualizador_img)
         val pv = dialog.findViewById<PhotoView>(R.id.PV_img)
         val btnCerrar = dialog.findViewById<MaterialButton>(R.id.BtnCerrarVisualizador)
-        try {
-            Glide.with(context).load(imagen).placeholder(R.drawable.img_enviada).into(pv)
-        } catch (e: Exception) { }
+        Glide.with(context).load(imagen).into(pv)
         btnCerrar.setOnClickListener { dialog.dismiss() }
-        dialog.setCanceledOnTouchOutside(false)
         dialog.show()
     }
 }

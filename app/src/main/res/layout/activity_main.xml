@@ -8,52 +8,59 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- Top Toolbar -->
     <RelativeLayout
+        android:id="@+id/ToolbarRL"
         android:layout_width="match_parent"
-        android:layout_height="55dp">
+        android:layout_height="55dp"
+        android:background="#FFFFFF">
         <TextView
             android:id="@+id/TituloRL"
-            android:text="@string/TituloRL"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true"
+            android:text="Meetly"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#212121"/>
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#ccc"
+            android:background="#EEEEEE"
             android:layout_alignParentBottom="true"/>
-
     </RelativeLayout>
 
-    <FrameLayout
-        android:id="@+id/FragmentL1"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/View1"
-        />
-
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/BottomNV"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        app:menu="@menu/mi_menu"
+        android:background="#FFFFFF"
+        app:elevation="8dp"
         app:labelVisibilityMode="labeled"
-        />
+        app:menu="@menu/mi_menu" />
 
+    <!-- Container for Fragments -->
+    <FrameLayout
+        android:id="@+id/FragmentL1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/ToolbarRL"
+        android:layout_above="@id/BottomNV" />
+
+    <!-- central FAB to open Chats - Moved higher to avoid overlap -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/FAB"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_search"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="40dp"
-        />
-    <View
-        android:id="@+id/View1"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#ccc"
-        android:layout_above="@id/BottomNV"/>
+        android:layout_marginBottom="80dp"
+        android:src="@drawable/ic_enviar_chat"
+        app:backgroundTint="#007BFF"
+        app:elevation="12dp"
+        app:tint="#FFFFFF"
+        android:contentDescription="Abrir Chats" />
+
 </RelativeLayout>

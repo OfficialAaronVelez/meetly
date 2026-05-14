@@ -1,6 +1,5 @@
 package com.example.meetly.Fragmentos
 
-import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -14,87 +13,103 @@ import com.example.meetly.Adaptadores.AdaptadorUsuario
 import com.example.meetly.Modelos.Usuario
 import com.example.meetly.databinding.FragmentChatsBinding
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 
 class FragmentChats : Fragment() {
 
-    private lateinit var binding: FragmentChatsBinding
-    private lateinit var mContext: Context
+    private var _binding: FragmentChatsBinding? = null
+    private val binding get() = _binding!!
+    
     private var usuarioLista: ArrayList<Usuario> = ArrayList()
-
-    override fun onAttach(context: Context) {
-        mContext = context
-        super.onAttach(context)
-    }
+    private var adaptadorUsuario: AdaptadorUsuario? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        binding = FragmentChatsBinding.inflate(inflater, container, false)
+        _binding = FragmentChatsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
         binding.RVUsuarios.setHasFixedSize(true)
-        binding.RVUsuarios.layoutManager = LinearLayoutManager(mContext)
+        binding.RVUsuarios.layoutManager = LinearLayoutManager(requireContext())
 
         binding.EtBuscarUsuario.doOnTextChanged { texto, _, _, _ ->
             buscarUsuario(texto.toString())
         }
 
         listarUsuarios()
-        return binding.root
     }
 
     private fun listarUsuarios() {
-        val miUid = FirebaseAuth.getInstance().currentUser!!.uid
-        FirebaseDatabase.getInstance().reference
-            .child("Usuarios").orderByChild("nombres")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    usuarioLista.clear()
-                    for (sn in snapshot.children) {
-                        val usuario = sn.getValue(Usuario::class.java)
-                        if (usuario != null && usuario.uid != miUid) {
-                            usuarioLista.add(usuario)
-                        }
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        if (firebaseUser == null) return
+        
+        val miUid = firebaseUser.uid
+        val ref = FirebaseDatabase.getInstance().reference.child("Usuarios")
+        
+        ref.orderByChild("nombres").addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (_binding == null) return
+                usuarioLista.clear()
+                for (sn in snapshot.children) {
+                    val usuario = sn.getValue(Usuario::class.java)
+                    if (usuario != null && usuario.uid != miUid) {
+                        usuarioLista.add(usuario)
                     }
-                    actualizarUI()
                 }
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("FragmentChats", "Error: ${error.message}")
-                    Toast.makeText(mContext, "Error al cargar usuarios", Toast.LENGTH_SHORT).show()
-                }
-            })
+                actualizarUI()
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FragmentChats", "Error: ${error.message}")
+            }
+        })
     }
 
     private fun buscarUsuario(query: String) {
-        val miUid = FirebaseAuth.getInstance().currentUser!!.uid
-        FirebaseDatabase.getInstance().reference
-            .child("Usuarios").orderByChild("nombres")
-            .startAt(query).endAt(query + "")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    usuarioLista.clear()
-                    for (sn in snapshot.children) {
-                        val usuario = sn.getValue(Usuario::class.java)
-                        if (usuario != null && usuario.uid != miUid) {
-                            usuarioLista.add(usuario)
-                        }
+        val firebaseUser = FirebaseAuth.getInstance().currentUser ?: return
+        val miUid = firebaseUser.uid
+        
+        val ref = FirebaseDatabase.getInstance().reference.child("Usuarios")
+        val dbQuery = if (query.isEmpty()) {
+            ref.orderByChild("nombres")
+        } else {
+            ref.orderByChild("nombres").startAt(query).endAt(query + "\uf8ff")
+        }
+
+        dbQuery.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (_binding == null) return
+                usuarioLista.clear()
+                for (sn in snapshot.children) {
+                    val usuario = sn.getValue(Usuario::class.java)
+                    if (usuario != null && usuario.uid != miUid) {
+                        usuarioLista.add(usuario)
                     }
-                    actualizarUI()
                 }
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("FragmentChats", "Error búsqueda: ${error.message}")
-                }
-            })
+                actualizarUI()
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FragmentChats", "Error búsqueda: ${error.message}")
+            }
+        })
     }
 
     private fun actualizarUI() {
+        if (_binding == null) return
         if (usuarioLista.isEmpty()) {
             binding.tvSinUsuarios.visibility = View.VISIBLE
             binding.RVUsuarios.visibility = View.GONE
         } else {
             binding.tvSinUsuarios.visibility = View.GONE
             binding.RVUsuarios.visibility = View.VISIBLE
-            binding.RVUsuarios.adapter = AdaptadorUsuario(mContext, usuarioLista)
+            adaptadorUsuario = AdaptadorUsuario(requireContext(), usuarioLista)
+            binding.RVUsuarios.adapter = adaptadorUsuario
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -27,11 +27,14 @@ class AdaptadorUsuario(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val usuario = listaUsuarios[position]
-        holder.uid.text = usuario.uid
         holder.nombre.text = usuario.nombres
         holder.email.text = usuario.email
-        Glide.with(contexto).load(usuario.imagen)
-            .placeholder(R.drawable.ic_imagen_perfil)
+        
+        // Usando ic_account ya que ic_imagen_perfil no existe
+        Glide.with(contexto)
+            .load(usuario.urlImagenPerfil)
+            .placeholder(R.drawable.ic_account)
+            .error(R.drawable.ic_account)
             .into(holder.imagen)
 
         holder.itemView.setOnClickListener {
@@ -43,7 +46,6 @@ class AdaptadorUsuario(
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val uid: TextView = itemView.findViewById(R.id.item_uid)
         val nombre: TextView = itemView.findViewById(R.id.item_nombre)
         val email: TextView = itemView.findViewById(R.id.item_email)
         val imagen: ImageView = itemView.findViewById(R.id.item_imagen)

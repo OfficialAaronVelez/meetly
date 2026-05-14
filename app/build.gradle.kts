@@ -54,22 +54,30 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    
+    // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    
+    // Firebase standard artifacts (KTX is included automatically)
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-storage")
+
+    // Google Play Services Auth
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-database")
 
     // JavaMail dependencies
     implementation("com.sun.mail:android-mail:1.6.7")
     implementation("com.sun.mail:android-activation:1.6.7")
-    implementation(libs.loginGoogle)
-
-    // Glide for images
+    
+    // Utils
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
-    implementation(libs.photoView)
-    implementation("com.google.firebase:firebase-storage")
-    implementation("com.google.firebase:firebase-messaging")
+    implementation("de.hdodenhof:circleimageview:3.1.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
 }
